@@ -133,6 +133,8 @@ void updateData()
   snprintf (msg, MSG_BUFFER_SIZE, "%s", String(dhwTemp).c_str());
   client.publish(ACTUAL_TEMP_DHW_GET_TOPIC, msg);
 
+  Serial.println("Current water temperature: " + String(dhwTemp) + " °C ");
+
   Serial.print("Current temperature: " + String(t) + " °C ");
   String tempSource = (millis() - lastTempSet > extTempTimeout_ms)
                       ? "(internal sensor)"
