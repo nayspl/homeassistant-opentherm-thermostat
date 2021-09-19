@@ -192,6 +192,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
+// Reconnect to MQTT every 5 seconds
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
@@ -217,8 +218,10 @@ void reconnect() {
 
 void setup()
 {
+  // start serial connection for debuging
   Serial.begin(115200);
-
+  
+  //Connect to Wifi
   Serial.println("Connecting to " + String(ssid));
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pass);
@@ -236,13 +239,15 @@ void setup()
   else {
     Serial.println("ok");
   }
-
+  
+  //Connect with MQTT server
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
-
+  
+  //Setup OT
   ot.begin(handleInterrupt);
 
-  //Init DS18B20 sensor
+  //Init DS18B20 temp sensor
   sensors.begin();
   sensors.requestTemperatures();
   sensors.setWaitForConversion(false); //switch to async mode
@@ -252,12 +257,16 @@ void setup()
 }
 
 void loop()
-{
+{ 
+  //Reconnect to MQTT if conenction is lost
   if (!client.connected()) {
     reconnect();
   }
+  
+  //Run loop
   client.loop();
-
+  
+  //Update data every second
   unsigned long now = millis();
   if (now - lastUpdate > statusUpdateInterval_ms) {
     lastUpdate = now;
