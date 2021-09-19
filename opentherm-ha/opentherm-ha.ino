@@ -14,7 +14,7 @@
 #include <OpenTherm.h>
 #include "config.h"
 
-const unsigned long extTempTimeout_ms = 60 * 1000;
+const unsigned long extTempTimeout_ms = 180 * 1000;
 const unsigned long statusUpdateInterval_ms = 1000;
 
 float  sp = 15, //set point
