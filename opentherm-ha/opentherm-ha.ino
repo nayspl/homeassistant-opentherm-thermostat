@@ -22,7 +22,8 @@ float  sp = 15, //set point
        t_last = 0, //prior temperature
        ierr = 25, //integral error
        dt = 0, //time between measurements
-       op = 0; //PID controller output
+       op = 0, //PID controller output
+       ophi = 65; //Upperbound on heater
 unsigned long ts = 0, new_ts = 0; //timestamp
 unsigned long lastUpdate = 0;
 unsigned long lastTempSet = 0;
@@ -53,11 +54,10 @@ float getTemp() {
     return t;
 }
 
-float pid(float sp, float pv, float pv_last, float& ierr, float dt) {
+float pid(float sp, float pv, float pv_last, float& ierr, float dt, float ophi) {
   float KP = 10;
   float KI = 0.02;
-  // upper and lower bounds on heater level
-  float ophi = 65;
+  // lower bound on heater level
   float oplo = 20;
   // calculate the error
   float error = sp - pv;
@@ -100,7 +100,7 @@ void updateData()
   dt = (new_ts - ts) / 1000.0;
   ts = new_ts;
   if (responseStatus == OpenThermResponseStatus::SUCCESS) {
-    op = pid(sp, t, t_last, ierr, dt);
+    op = pid(sp, t, t_last, ierr, dt, ophi);
     ot.setBoilerTemperature(op);
   }
   t_last = t;
@@ -157,6 +157,10 @@ const String modeSetTopic(MODE_SET_TOPIC);
 const String tempDhwSetTopic(TEMP_DHW_SET_TOPIC);
 const String stateDhwSetTopic(STATE_DHW_SET_TOPIC);
 
+//////////////////////////////////////////////////////////////////
+// CALLBACK
+//////////////////////////////////////////////////////////////////
+
 void callback(char* topic, byte* payload, unsigned int length) {
   const String topicStr(topic);
 
@@ -192,6 +196,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
+//////////////////////////////////////////////////////////////////
+// RECONNECT
+//////////////////////////////////////////////////////////////////
+
 // Reconnect to MQTT every 5 seconds
 void reconnect() {
   // Loop until we're reconnected
@@ -215,6 +223,12 @@ void reconnect() {
     }
   }
 }
+
+// this is where the new topic needs to be added
+
+//////////////////////////////////////////////////////////////////
+// SETUP
+//////////////////////////////////////////////////////////////////
 
 void setup()
 {
@@ -255,6 +269,10 @@ void setup()
   ts = millis();
   lastTempSet = -extTempTimeout_ms;
 }
+
+//////////////////////////////////////////////////////////////////
+// LOOP
+//////////////////////////////////////////////////////////////////
 
 void loop()
 { 
