@@ -13,12 +13,10 @@
 #include <PubSubClient.h>
 #include <OpenTherm.h>
 #include "config.h"
-#include <ESP8266mDNS.h>
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>					   
 
 const unsigned long extTempTimeout_ms = 180 * 1000;
 const unsigned long statusUpdateInterval_ms = 1000;
+
 float  sp = 15, //set point
        t = 15, //current temperature
        t_last = 0, //prior temperature
@@ -257,9 +255,6 @@ void setup()
   }
   
   //Connect with MQTT server
-  ArduinoOTA.setHostname("Opentherm"); // give an name to our module
-  ArduinoOTA.begin(); // OTA initialization
-  
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
   
@@ -281,7 +276,6 @@ void setup()
 
 void loop()
 { 
-  ArduinoOTA.handle();
   //Reconnect to MQTT if conenction is lost
   if (!client.connected()) {
     reconnect();
@@ -295,20 +289,5 @@ void loop()
   if (now - lastUpdate > statusUpdateInterval_ms) {
     lastUpdate = now;
     updateData();
-  }
-
-  static bool failFlag = false;
-  bool fail = now - lastTempSet > extTempTimeout_ms && now - lastSpSet > spOverrideTimeout_ms;
-  if (fail) {
-    if (!failFlag) {
-      failFlag = true;
-      Serial.printf("Neither temperature nor setpoint provided, setting heating water to %.1f\r\n", noCommandSpOverride);
-    }
-
-    lastSpSet = millis();
-    op_override = noCommandSpOverride;
-  }
-  else {
-    failFlag = false;
   }
 }
